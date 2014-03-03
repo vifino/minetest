@@ -114,6 +114,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 	#define strlcpy(d, s, n) mystrlcpy(d, s, n)
 #endif
 
+int clock_gettime(clockid_t clk_id, struct timespec *tp) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    tp.tv_sec -> tv.tv_sec;
+    tp.tv_nsec -> tv.tv_usec*1000;
+}
+
 #define PADDING(x, y) ((ALIGNOF(y) - ((uintptr_t)(x) & (ALIGNOF(y) - 1))) & (ALIGNOF(y) - 1))
 
 namespace porting
