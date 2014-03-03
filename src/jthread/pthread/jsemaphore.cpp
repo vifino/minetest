@@ -20,6 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <errno.h>
 #include <sys/time.h>
 #include "jthread/jsemaphore.h"
+#include <unistd.h>
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
@@ -79,8 +80,8 @@ bool JSemaphore::Wait(unsigned int time_ms) {
     
     
     while ( (sem_wait_retval != 0) && (my_time.tv_sec >= waittime.tv_sec) && (my_time.tv_usec >= waittime.tv_nsec*1000) ) {
-        struct timespec mytimespec = { 0,(100*1000)) };
-        nanosleep(mytimespec);
+        struct timespec mytimespec = { 0,(100*1000) };
+        usleep(time_ms);
         sem_wait_retval = sem_trywait(&m_semaphore);
         
         if (gettimeofday(&my_time, NULL) == -1) {
