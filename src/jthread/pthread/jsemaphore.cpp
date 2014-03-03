@@ -56,19 +56,39 @@ void JSemaphore::Wait() {
 bool JSemaphore::Wait(unsigned int time_ms) {
 	struct timespec waittime;
 	struct timeval now;
-
+    
 	if (gettimeofday(&now, NULL) == -1) {
 		assert("Unable to get time by clock_gettime!" == 0);
 		return false;
 	}
-
+    
 	waittime.tv_nsec = ((time_ms % 1000) * 1000 * 1000) + (now.tv_usec * 1000);
 	waittime.tv_sec  = (time_ms / 1000) + (waittime.tv_nsec / (1000*1000*1000)) + now.tv_sec;
 	waittime.tv_nsec %= 1000*1000*1000;
-
+    
 	errno = 0;
-	int sem_wait_retval = sem_timedwait(&m_semaphore,&waittime);
-
+    
+    int sem_wait_retval = sem_trywait(&m_semaphore);
+    
+    struct timeval my_time;
+    if (gettimeofday(&my_time, NULL) == -1) {
+        assert("Unable to get time by clock_gettime!" == 0);
+        return false;
+    }
+    
+    
+    
+    while ( (sem_wait_retval != 0) && (my_time.tv_sec >= waittime.tv_sec) && (my_time.tv_usec >= waittime.tv_nsec*1000) ) {
+        struct timespec mytimespec = { 0,(100*1000)) };
+        nanosleep(mytimespec);
+        sem_wait_retval = sem_trywait(&m_semaphore);
+        
+        if (gettimeofday(&my_time, NULL) == -1) {
+            assert("Unable to get time by clock_gettime!" == 0);
+            return false;
+        }
+    }
+    
 	if (sem_wait_retval == 0)
 	{
 		return true;
